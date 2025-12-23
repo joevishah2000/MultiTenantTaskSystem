@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, status, BackgroundTasks
+from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -83,7 +84,7 @@ def read_tasks(
     }
     
     # Store in cache
-    cache.set_cache(cache_key, response_data, ttl=60)
+    cache.set_cache(cache_key, jsonable_encoder(response_data), ttl=60)
     
     return response_data
 

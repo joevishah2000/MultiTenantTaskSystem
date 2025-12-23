@@ -141,6 +141,7 @@ const Dashboard = ({ onLogout }) => {
   const [showModal, setShowModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [filters, setFilters] = useState({ status: '', priority: '' });
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
 
   const limit = 10;
@@ -171,7 +172,7 @@ const Dashboard = ({ onLogout }) => {
       }
     };
     fetchData();
-  }, [page, filters, onLogout]);
+  }, [page, filters, onLogout, refreshTrigger]);
 
   const handleDelete = async (id) => {
     if (!id || !confirm('Are you sure?')) return;
@@ -300,7 +301,7 @@ const Dashboard = ({ onLogout }) => {
         <TaskModal
           task={editingTask}
           onClose={() => setShowModal(false)}
-          onSuccess={() => { setPage(1); setShowModal(false); }}
+          onSuccess={() => { setPage(1); setRefreshTrigger(prev => prev + 1); setShowModal(false); }}
         />
       )}
     </div>
