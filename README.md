@@ -43,7 +43,7 @@ This is a production-style backend system built with FastAPI, PostgreSQL, and Re
 ### PostgreSQL (Supabase)
 The project uses managed PostgreSQL via Supabase. Database schema is created and versioned using SQLAlchemy models and migrations.
 
-![PostgreSQL (Supabase)](Screenshots/Table editor.JPG)
+![PostgreSQL](Screenshots/Table editor.JPG)
 
 ### Redis Cache
 Redis is used to cache high-read APIs such as task listings and user profile data, with TTL-based invalidation.
