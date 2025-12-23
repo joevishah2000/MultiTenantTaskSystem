@@ -74,7 +74,7 @@ const AuthView = ({ setToken }) => {
       exit={{ opacity: 0, scale: 1.05 }}
       className="flex items-center justify-center min-h-screen p-4"
     >
-      <div className="glass-container w-full max-w-[450px] p-10 md:p-14 text-center">
+      <div className="square-container w-full max-w-[450px] p-10 md:p-14 text-center bg-black/20 border border-white/10 backdrop-blur-xl">
         <h1 className="text-4xl font-black mb-12 text-white">{view === 'login' ? 'Login' : 'Register'}</h1>
 
         {error && (
@@ -113,7 +113,7 @@ const AuthView = ({ setToken }) => {
             <button type="button" className="link-btn">Forget Password</button>
           </div>
 
-          <button type="submit" className="btn-login" disabled={loading}>
+          <button type="submit" className="square-btn w-full py-4 bg-white text-indigo-900 font-bold text-lg hover:bg-gray-100 transition mt-6" disabled={loading}>
             {loading ? 'Processing...' : (view === 'login' ? 'Log in' : 'Create Account')}
           </button>
         </form>
@@ -140,15 +140,24 @@ const Dashboard = ({ onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+  const [filters, setFilters] = useState({ status: '', priority: '' });
 
-  const limit = 6;
+
+  const limit = 10;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        const params = new URLSearchParams({
+          page,
+          limit,
+          ...(filters.status && { status: filters.status }),
+          ...(filters.priority && { priority: filters.priority })
+        });
+
         const [taskRes, statRes] = await Promise.all([
-          api.get(`/tasks?page=${page}&limit=${limit}`),
+          api.get(`/tasks?${params}`),
           api.get('/admin/stats')
         ]);
         setTasks(taskRes.data.tasks || []);
@@ -162,7 +171,7 @@ const Dashboard = ({ onLogout }) => {
       }
     };
     fetchData();
-  }, [page, onLogout]);
+  }, [page, filters, onLogout]);
 
   const handleDelete = async (id) => {
     if (!id || !confirm('Are you sure?')) return;
@@ -182,18 +191,42 @@ const Dashboard = ({ onLogout }) => {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
-      <header className="flex justify-between items-center mb-12">
+      <header className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 glass-container flex items-center justify-center text-white">
+          <div className="w-12 h-12 square-container flex items-center justify-center text-white bg-white/10">
             <Layout size={24} />
           </div>
           <h2 className="text-3xl font-black text-white">Workspace</h2>
         </div>
-        <div className="flex gap-4">
-          <button onClick={() => { setEditingTask(null); setShowModal(true); }} className="btn-login px-8 !py-2 !mt-0 !w-auto text-sm">
+
+        <div className="flex flex-wrap gap-4 items-center">
+          <select
+            className="square-input bg-white/5 border border-white/10 text-white px-4 py-2 text-sm outline-none focus:border-white/30 transition"
+            value={filters.status}
+            onChange={(e) => { setFilters({ ...filters, status: e.target.value }); setPage(1); }}
+          >
+            <option value="">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="in_progress">Ongoing</option>
+            <option value="completed">Done</option>
+          </select>
+
+          <select
+            className="square-input bg-white/5 border border-white/10 text-white px-4 py-2 text-sm outline-none focus:border-white/30 transition"
+            value={filters.priority}
+            onChange={(e) => { setFilters({ ...filters, priority: e.target.value }); setPage(1); }}
+          >
+            <option value="">All Priority</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+
+          <button onClick={() => { setEditingTask(null); setShowModal(true); }} className="square-btn bg-white text-indigo-950 px-8 py-2 text-sm font-bold hover:bg-opacity-90 transition flex items-center gap-2">
             <Plus size={18} /> New Task
           </button>
-          <button onClick={onLogout} className="glass-container px-5 py-2 flex items-center gap-2 hover:bg-white/10 transition text-sm font-bold">
+
+          <button onClick={onLogout} className="square-btn border border-white/20 px-5 py-2 flex items-center gap-2 hover:bg-white/10 transition text-sm font-bold text-white">
             <LogOut size={16} /> Sign Out
           </button>
         </div>
@@ -223,26 +256,40 @@ const Dashboard = ({ onLogout }) => {
           </div>
         )}
         {!loading && tasks.length === 0 && (
-          <div className="text-center py-20 bg-white/5 rounded-3xl border border-white/5">
+          <div className="text-center py-20 bg-white/5 border border-white/5">
             <p className="text-white/30 text-lg">Your workspace is clean. Create a task! ✨</p>
           </div>
         )}
       </div>
 
-      {!loading && totalPages > 1 && (
-        <div className="mt-12 flex justify-center items-center gap-8">
+      {!loading && (
+        <div className="mt-12 flex justify-center items-center gap-4 flex-wrap">
           <button
             disabled={page === 1}
             onClick={() => setPage(p => p - 1)}
-            className="glass-container p-3 disabled:opacity-10 hover:bg-white/10 transition"
+            className="square-btn p-3 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition text-white"
           >
             <ChevronLeft size={20} />
           </button>
-          <span className="text-xs font-black text-white/40 uppercase tracking-widest">{page} / {totalPages}</span>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+            <button
+              key={pageNum}
+              onClick={() => setPage(pageNum)}
+              className={`square-btn w-10 h-10 flex items-center justify-center text-sm font-bold transition
+                    ${page === pageNum
+                  ? 'bg-white text-indigo-900 shadow-lg scale-110'
+                  : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white'
+                }`}
+            >
+              {pageNum}
+            </button>
+          ))}
+
           <button
             disabled={page >= totalPages}
             onClick={() => setPage(p => p + 1)}
-            className="glass-container p-3 disabled:opacity-10 hover:bg-white/10 transition"
+            className="square-btn p-3 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition text-white"
           >
             <ChevronRight size={20} />
           </button>
@@ -261,8 +308,8 @@ const Dashboard = ({ onLogout }) => {
 };
 
 const StatCard = ({ title, value, icon }) => (
-  <div className="glass-container p-6 bg-white/5 flex items-center gap-5">
-    <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-white">
+  <div className="square-container p-6 bg-white/5 flex items-center gap-5 border border-white/10 hover:border-white/20 transition">
+    <div className="w-12 h-12 bg-white/10 flex items-center justify-center text-white">
       {icon}
     </div>
     <div>
@@ -293,9 +340,6 @@ const TaskCard = ({ task, onEdit, onDelete }) => {
           {task.priority || 'Medium'}
         </span>
         <div className="flex gap-1">
-          <button onClick={onEdit} className="p-2 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition">
-            <Edit size={14} />
-          </button>
           <button onClick={onDelete} className="p-2 hover:bg-white/10 rounded-lg text-white/40 hover:text-red-400 transition">
             <Trash2 size={14} />
           </button>
